@@ -36,15 +36,12 @@ jobs:
           echo "Calculated Version Code: $VERSION_CODE"
           echo "Calculated Version Name: $VERSION_NAME"
 
-      - name: Grant Execute Permission to Gradlew
-        run: chmod +x gradlew
-
       - name: Build Signed Release APK
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || 'mdfinance123' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'mdfinance123' }}
         run: |
-          ./gradlew assembleRelease \
+          gradle assembleRelease \
             -PversionCode=${{ steps.versioning.outputs.version_code }} \
             -PversionName=${{ steps.versioning.outputs.version_name }}
 
