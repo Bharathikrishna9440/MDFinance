@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "597539649927",
+    "firebase_url": "https://collection-app-2007-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "md-finance-2007",
+    "storage_bucket": "md-finance-2007.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:597539649927:android:128767d8590b22222c3b22",
+        "android_client_info": {
+          "package_name": "com.aistudio.weeklyfinance.khcrwt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKQFX4WuYrhEXkY9cVCxjajtUg_NgKpsQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

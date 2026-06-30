@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 1. Soft ambient drop shadow under the Vel to make it pop and appear 3D -->
+    <path
+        android:fillColor="#1F000000"
+        android:pathData="M 56,22 C 48,32 38,46 38,58 C 38,67 46,72 53,72 L 59,72 C 66,72 74,67 74,58 C 74,46 64,32 56,22 Z" />
+    <path
+        android:fillColor="#1F000000"
+        android:pathData="M 54,72 L 58,72 L 58,94 C 58,95 57,96 56,96 C 55,96 54,95 54,94 Z" />
+
+    <!-- 2. The Golden Shaft / Stem -->
+    <path
+        android:pathData="M 52,70 L 56,70 L 56,92 C 56,93 55,94 54,94 C 53,94 52,93 52,92 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="52"
+                android:startY="70"
+                android:endX="56"
+                android:endY="94">
+                <item android:color="#FFE082" android:offset="0.0" />
+                <item android:color="#FFB300" android:offset="0.5" />
+                <item android:color="#FF8F00" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 3. The Golden Spearhead (Vel blade) -->
+    <path
+        android:strokeWidth="1"
+        android:strokeColor="#FF8F00"
+        android:pathData="M 54,20 C 46,30 36,44 36,56 C 36,65 44,70 51,70 L 57,70 C 64,70 72,65 72,56 C 72,44 62,30 54,20 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="36"
+                android:startY="20"
+                android:endX="72"
+                android:endY="70">
+                <item android:color="#FFF3E0" android:offset="0.0" />
+                <item android:color="#FFD54F" android:offset="0.3" />
+                <item android:color="#FFB300" android:offset="0.7" />
+                <item android:color="#FF6F00" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 4. Decorative Ring/Spherical Base between Shaft and Blade -->
+    <path
+        android:pathData="M 54,67 A 3,3 0 1 1 53.99,67 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="51"
+                android:startY="67"
+                android:endX="57"
+                android:endY="73">
+                <item android:color="#FFF9C4" android:offset="0.0" />
+                <item android:color="#FFD54F" android:offset="0.5" />
+                <item android:color="#FF8F00" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 5. Three horizontal stripes representing the sacred Vibhuti (Holy Ash) -->
+    <!-- Stripe 1 (Top) -->
+    <path
+        android:fillColor="#E0F7FA"
+        android:pathData="M 47,45 L 61,45 L 61,47 L 47,47 Z" />
+    <!-- Stripe 2 (Middle) -->
+    <path
+        android:fillColor="#E0F7FA"
+        android:pathData="M 45,49 L 63,49 L 63,51 L 45,51 Z" />
+    <!-- Stripe 3 (Bottom) -->
+    <path
+        android:fillColor="#E0F7FA"
+        android:pathData="M 47,53 L 61,53 L 61,55 L 47,55 Z" />
+
+    <!-- 6. Traditional Crimson Kumkum dot in the exact center -->
+    <path
+        android:fillColor="#C62828"
+        android:pathData="M 54,47.5 A 2.5,2.5 0 1 1 53.99,47.5 Z" />
+
+</vector>

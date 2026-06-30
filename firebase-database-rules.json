@@ -1,0 +1,21 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "edit_logs": {
+      "$user_node": {
+        ".indexOn": ["timestamp", "actionType"]
+      }
+    },
+    "master_databases": {
+      "$user_node": {
+        ".indexOn": ["timestamp"]
+      }
+    },
+    "dead_letter_queue": {
+      "$user_node": {
+        ".indexOn": ["timestamp", "flaggedAt"]
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Remix: MD Finance",
+  "description": "Track weekly collections and debt lists with automated SMS reminders and per-cycle account management via a simple Khatabook-style interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

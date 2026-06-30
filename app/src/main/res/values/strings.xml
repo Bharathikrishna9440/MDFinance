@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MD Finance</string>
+    <string name="notification_listener_label">Weekly Finance UPI Auto-Sync</string>
+</resources>
