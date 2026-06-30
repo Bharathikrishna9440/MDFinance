@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.network.FirebaseConnectionManager
 import com.example.network.FirebaseUpdateManager
@@ -93,9 +94,50 @@ class MainActivity : ComponentActivity() {
     setContent {
       MyApplicationTheme {
         viewModel = viewModel()
+        
+        // Handle initial intent for deep linking
+        LaunchedEffect(Unit) {
+            handleDeepLink(intent)
+        }
+
         WeeklyFinanceApp(viewModel = viewModel)
       }
     }
+  }
+
+  override fun onNewIntent(intent: android.content.Intent) {
+      super.onNewIntent(intent)
+      setIntent(intent)
+      if (::viewModel.isInitialized) {
+          handleDeepLink(intent)
+      }
+  }
+
+  private fun handleDeepLink(intent: android.content.Intent?) {
+      val uri = intent?.data ?: return
+      
+      when (uri.host) {
+          "dashboard" -> viewModel.navigateToHome()
+          "settings" -> viewModel.navigateTo(com.example.ui.Screen.Settings)
+          "history" -> viewModel.navigateTo(com.example.ui.Screen.History)
+          "full_ledger" -> viewModel.navigateTo(com.example.ui.Screen.FullLedgerHistory)
+          "ai_chat" -> viewModel.navigateTo(com.example.ui.Screen.AiChat)
+          "add_customer" -> viewModel.navigateTo(com.example.ui.Screen.AddCustomer)
+          "customer" -> {
+              val idStr = uri.lastPathSegment
+              idStr?.toIntOrNull()?.let { id ->
+                  viewModel.navigateTo(com.example.ui.Screen.CustomerDetail(id))
+              }
+          }
+          "bulk_entry" -> {
+              val day = uri.lastPathSegment ?: "Home"
+              viewModel.navigateTo(com.example.ui.Screen.BulkEntry(day))
+          }
+          "search" -> {
+              val day = uri.lastPathSegment ?: "Home"
+              viewModel.navigateTo(com.example.ui.Screen.Search(day))
+          }
+      }
   }
 
   override fun onResume() {

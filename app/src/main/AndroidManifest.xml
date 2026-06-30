@@ -33,8 +33,24 @@
             android:theme="@style/Theme.MyApplication">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Deep linking intent filter -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                
+                <data android:scheme="mdfinance" android:host="dashboard" />
+                <data android:scheme="mdfinance" android:host="settings" />
+                <data android:scheme="mdfinance" android:host="history" />
+                <data android:scheme="mdfinance" android:host="full_ledger" />
+                <data android:scheme="mdfinance" android:host="ai_chat" />
+                <data android:scheme="mdfinance" android:host="add_customer" />
+                <data android:scheme="mdfinance" android:host="customer" />
+                <data android:scheme="mdfinance" android:host="bulk_entry" />
+                <data android:scheme="mdfinance" android:host="search" />
             </intent-filter>
         </activity>
 
