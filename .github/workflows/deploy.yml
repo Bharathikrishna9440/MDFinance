@@ -53,27 +53,6 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Upload APK to Firebase Storage
-        run: |
-          VERSION_CODE="${{ steps.versioning.outputs.version_code }}"
-          gsutil cp app/build/outputs/apk/release/app-release.apk gs://md-finance-2007.firebasestorage.app/mdfinance-update-$VERSION_CODE.apk
-          gsutil acl ch -u AllUsers:R gs://md-finance-2007.firebasestorage.app/mdfinance-update-$VERSION_CODE.apk
-          echo "APK successfully hosted: https://storage.googleapis.com/md-finance-2007.firebasestorage.app/mdfinance-update-$VERSION_CODE.apk"
-
-      - name: Update Firebase Realtime Database Update Config
-        run: |
-          VERSION_CODE="${{ steps.versioning.outputs.version_code }}"
-          VERSION_NAME="${{ steps.versioning.outputs.version_name }}"
-          ACCESS_TOKEN=$(gcloud auth print-access-token)
-          
-          curl -X PUT \
-            -H "Authorization: Bearer $ACCESS_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"versionId\": $VERSION_CODE, \"versionName\": \"$VERSION_NAME\", \"apkFileId\": \"https://storage.googleapis.com/md-finance-2007.firebasestorage.app/mdfinance-update-$VERSION_CODE.apk\"}" \
-            "https://collection-app-2007-default-rtdb.asia-southeast1.firebasedatabase.app/update_config.json"
-          
-          echo "Firebase RTDB config updated."
-
       - name: Upload to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1.7.0
         with:
