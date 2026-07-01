@@ -19,6 +19,10 @@ object SmsService {
         smsPaused: Boolean,
         simSelection: String
     ) {
+        if (phone.trim().isEmpty()) {
+            Toast.makeText(context, "No phone number available. SMS skipped.", Toast.LENGTH_SHORT).show()
+            return
+        }
         if (smsPaused) {
             Toast.makeText(context, "All outgoing SMS notifications are temporarily PAUSED globally in Settings.", Toast.LENGTH_LONG).show()
             return
@@ -209,6 +213,10 @@ object SmsService {
     }
 
     fun triggerWhatsappWebFallback(context: Context, phone: String, text: String) {
+        if (phone.trim().isEmpty()) {
+            Toast.makeText(context, "No phone number available. WhatsApp skipped.", Toast.LENGTH_SHORT).show()
+            return
+        }
         var cleanPhone = phone.filter { it.isDigit() }
         if (cleanPhone.isNotBlank() && cleanPhone.length == 10) {
             cleanPhone = "91$cleanPhone"
@@ -236,6 +244,10 @@ object SmsService {
         upiId: String,
         qrImageUri: String?
     ) {
+        if (customer.phone.trim().isEmpty()) {
+            Toast.makeText(context, "No phone number available. WhatsApp skipped.", Toast.LENGTH_SHORT).show()
+            return
+        }
         val totalDue = loan.loanAmount + loan.interestAmount
         val remaining = maxOf(0.0, totalDue - loan.paidAmount)
         val upiLink = getUpiLink(context, upiId, customer.name)

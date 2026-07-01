@@ -1838,131 +1838,182 @@ fun StatsReportingCard(
                 val showCollection = if (isHome) stats.todaysCollectedAmount else stats.groupTodaysCollectedAmount
                 val showDisbursed = if (isHome) stats.todaysDisbursedAmount else stats.groupTodaysDisbursedAmount
                 val showInterest = if (isHome) stats.todaysInterestAmount else stats.groupTodaysInterestAmount
+                val showDeductions = if (isHome) stats.todaysDeductionsAmount else stats.groupTodaysDeductionsAmount
 
                 // 1. Collected
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(appColors.todayCollectionBg, RoundedCornerShape(12.dp))
-                        .clickable(enabled = onCardClick != null) { onCardClick?.invoke("COLLECTION") }
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                        .testTag("stats_card_collection_btn"),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                if (showCollection > 0.0) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(appColors.todayCollectionBg, RoundedCornerShape(12.dp))
+                            .clickable(enabled = onCardClick != null) { onCardClick?.invoke("COLLECTION") }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                            .testTag("stats_card_collection_btn"),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.TrendingUp,
-                            contentDescription = "Collected",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = translate("Collected", language),
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            letterSpacing = 0.5.sp
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.TrendingUp,
+                                contentDescription = "Collected",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = translate("Collected", language),
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                        AnimatedNumberText(
+                            targetValue = showCollection,
+                            prefix = "₹ ",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Visible,
+                            delayMillis = 0,
+                            durationMillis = 1200
                         )
                     }
-                    AnimatedNumberText(
-                        targetValue = showCollection,
-                        prefix = "₹ ",
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Visible,
-                        delayMillis = 0,
-                        durationMillis = 1200
-                    )
                 }
 
                 // 2. Disbursed
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(appColors.todayDueCreatedBg, RoundedCornerShape(12.dp))
-                        .clickable(enabled = onCardClick != null) { onCardClick?.invoke("DISBURSAL") }
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                        .testTag("stats_card_disbursal_btn"),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                if (showDisbursed > 0.0) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(appColors.todayDueCreatedBg, RoundedCornerShape(12.dp))
+                            .clickable(enabled = onCardClick != null) { onCardClick?.invoke("DISBURSAL") }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                            .testTag("stats_card_disbursal_btn"),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.TrendingDown,
-                            contentDescription = "Disbursed",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = translate("Disbursed", language),
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            letterSpacing = 0.5.sp
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.TrendingDown,
+                                contentDescription = "Disbursed",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = translate("Disbursed", language),
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                        AnimatedNumberText(
+                            targetValue = showDisbursed,
+                            prefix = "₹ ",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Visible,
+                            delayMillis = 150,
+                            durationMillis = 1200
                         )
                     }
-                    AnimatedNumberText(
-                        targetValue = showDisbursed,
-                        prefix = "₹ ",
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Visible,
-                        delayMillis = 150,
-                        durationMillis = 1200
-                    )
                 }
 
                 // 3. Interest
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(appColors.todayInterestBg, RoundedCornerShape(12.dp))
-                        .clickable(enabled = onCardClick != null) { onCardClick?.invoke("PROFIT") }
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                        .testTag("stats_card_profit_btn"),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                if (showInterest > 0.0) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(appColors.todayInterestBg, RoundedCornerShape(12.dp))
+                            .clickable(enabled = onCardClick != null) { onCardClick?.invoke("PROFIT") }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                            .testTag("stats_card_profit_btn"),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Percent,
-                            contentDescription = "Interest",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = translate("Interest", language),
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            letterSpacing = 0.5.sp
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Percent,
+                                contentDescription = "Interest",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = translate("Interest", language),
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                        AnimatedNumberText(
+                            targetValue = showInterest,
+                            prefix = "₹ ",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Visible,
+                            delayMillis = 300,
+                            durationMillis = 1200
                         )
                     }
-                    AnimatedNumberText(
-                        targetValue = showInterest,
-                        prefix = "₹ ",
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Visible,
-                        delayMillis = 300,
-                        durationMillis = 1200
-                    )
+                }
+
+                // 4. Deductions
+                if (showDeductions > 0.0) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF8B5CF6), RoundedCornerShape(12.dp))
+                            .clickable(enabled = onCardClick != null) { onCardClick?.invoke("DEDUCTIONS") }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                            .testTag("stats_card_deductions_btn"),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoneyOff,
+                                contentDescription = "Deductions",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = translate("Deductions", language),
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                        AnimatedNumberText(
+                            targetValue = showDeductions,
+                            prefix = "₹ ",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Visible,
+                            delayMillis = 450,
+                            durationMillis = 1200
+                        )
+                    }
                 }
             }
             

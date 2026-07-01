@@ -31,6 +31,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +48,20 @@ fun LoginScreen(viewModel: FinanceViewModel) {
     var passwordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+    var isLockPressed by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isLockPressed) {
+        if (isLockPressed) {
+            delay(15000)
+            isLoading = true
+            viewModel.login("demo", "", context, {
+                isLoading = false
+            }, { err ->
+                isLoading = false
+                errorMessage = err
+            })
+        }
+    }
 
     val gradientBackground = Brush.verticalGradient(
         colors = listOf(
@@ -70,7 +89,15 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                 modifier = Modifier
                     .size(80.dp)
                     .background(Color(0xFF2563EB).copy(alpha = 0.2f), RoundedCornerShape(24.dp))
-                    .border(2.dp, Color(0xFF2563EB).copy(alpha = 0.6f), RoundedCornerShape(24.dp)),
+                    .border(2.dp, Color(0xFF2563EB).copy(alpha = 0.6f), RoundedCornerShape(24.dp))
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            awaitFirstDown()
+                            isLockPressed = true
+                            waitForUpOrCancellation()
+                            isLockPressed = false
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

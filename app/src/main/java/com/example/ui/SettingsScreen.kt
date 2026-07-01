@@ -125,13 +125,13 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                     text = when (activeSubPage) {
                         "language" -> translate("App Language", language)
                         "font" -> translate("App Font Size Option", language)
-                        "business" -> "Business Profile & UPI"
-                        "groups" -> "Collection Groups (Days)"
-                        "sim" -> "SIM Card Preference"
-                        "automation" -> "Ledger & SMS Automation"
-                        "templates" -> "Message & Reminder Templates"
+                        "business" -> translate("Business Profile & UPI", language)
+                        "groups" -> translate("Collection Groups (Days)", language)
+                        "sim" -> translate("SIM Card Preference", language)
+                        "automation" -> translate("Ledger & SMS Automation", language)
+                        "templates" -> translate("Message & Reminder Templates", language)
                         "backup" -> translate("App Data Backup & Restore (JSON)", language)
-                        "reset" -> "System Reset & Maintenance"
+                        "reset" -> translate("System Reset & Maintenance", language)
                         "audit" -> translate("System Audit Logs", language)
                         "users_management" -> translate("User Account Management", language)
                         "system_update" -> translate("System Auto-Update Settings", language)
@@ -150,7 +150,97 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
         }
 
         if (activeSubPage == null) {
-            // 1. Offline Mode Main Toggle
+            Text(translate("Display & General", language), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF64748B), modifier = Modifier.padding(top = 8.dp, bottom = 4.dp, start = 4.dp))
+
+            SettingsMenuCard(
+                title = translate("App Language", language),
+                subtitle = translate("English / Tamil option selection", language),
+                iconBgColor = Color(0xFFF1F5F9),
+                customIcon = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text("A", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                        Text("அ", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A), modifier = Modifier.padding(start = 1.dp))
+                    }
+                },
+                onClick = { activeSubPage = "language" },
+                testTag = "settings_language_btn"
+            )
+
+            SettingsMenuCard(
+                title = translate("App Font Size Option", language),
+                subtitle = translate("Normal, Medium, Large, Extra Large text choices", language),
+                iconBgColor = Color(0xFFF1F5F9),
+                customIcon = {
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text("A", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                        Text("A", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A), modifier = Modifier.padding(horizontal = 1.dp))
+                        Text("A", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    }
+                },
+                onClick = { activeSubPage = "font" },
+                testTag = "settings_font_btn"
+            )
+
+            SettingsMenuCard(
+                title = translate("Device Type", language),
+                subtitle = translate("Switch between Main Device and Additional Device", language),
+                icon = Icons.Default.AccountBox,
+                iconTint = Color(0xFF8B5CF6),
+                iconBgColor = Color(0xFFEDE9FE),
+                onClick = { activeSubPage = "type_selection" },
+                testTag = "settings_user_type_btn"
+            )
+
+            Text(translate("Business & Operations", language), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF64748B), modifier = Modifier.padding(top = 16.dp, bottom = 4.dp, start = 4.dp))
+
+            SettingsMenuCard(
+                title = translate("Business Profile", language),
+                subtitle = translate("Manage merchant identification and notification footer text", language),
+                icon = Icons.Default.Home,
+                iconTint = Color(0xFF0F766E),
+                iconBgColor = Color(0xFFCCFBF1),
+                onClick = { activeSubPage = "business" },
+                testTag = "settings_business_btn"
+            )
+
+            SettingsMenuCard(
+                title = translate("Collection Groups (Days)", language),
+                subtitle = translate("Reorder, rename and configure active day route circles", language),
+                icon = Icons.Default.List,
+                iconTint = Color(0xFF7C3AED),
+                iconBgColor = Color(0xFFF3E8FF),
+                onClick = { activeSubPage = "groups" },
+                testTag = "settings_groups_btn"
+            )
+
+            SettingsMenuCard(
+                title = translate("Message & Reminder Templates", language),
+                subtitle = translate("Customize SMS, WhatsApp confirmations and dynamic tags", language),
+                icon = Icons.Default.Email,
+                iconTint = Color(0xFFEA580C),
+                iconBgColor = Color(0xFFFFEDD5),
+                onClick = { activeSubPage = "templates" },
+                testTag = "settings_templates_btn"
+            )
+
+            SettingsMenuCard(
+                title = translate("SIM Card Preference", language),
+                subtitle = translate("Select outbound SMS transaction delivery slots", language),
+                icon = Icons.Default.SimCard,
+                iconTint = Color(0xFFD946EF),
+                iconBgColor = Color(0xFFFDF4FF),
+                onClick = { activeSubPage = "sim" },
+                testTag = "settings_sim_btn"
+            )
+
+            Text(translate("Cloud & Connectivity", language), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF64748B), modifier = Modifier.padding(top = 16.dp, bottom = 4.dp, start = 4.dp))
+
             val offlineModeEnabled by viewModel.offlineModeEnabled.collectAsStateWithLifecycle()
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -158,7 +248,6 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp)
                     .testTag("settings_offline_mode_card")
             ) {
                 Row(
@@ -209,7 +298,38 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                 }
             }
 
-            // 2. AI (Easwar) Enable/Disable Toggle
+            SettingsMenuCard(
+                title = translate("Google Contacts Sync Settings", language),
+                subtitle = translate("Sync borrower contact information directly to selected Google account", language),
+                icon = Icons.Default.ContactPage,
+                iconTint = Color(0xFF3B82F6),
+                iconBgColor = Color(0xFFDBEAFE),
+                onClick = { activeSubPage = "contacts_sync" },
+                testTag = "settings_contacts_sync_btn"
+            )
+
+            SettingsMenuCard(
+                title = translate("Firebase Unified Operations", language),
+                subtitle = translate("Manage live Analytics, In-App Campaigns, Remote Config, Push Alerts & Diagnostics", language),
+                icon = Icons.Default.Cloud,
+                iconTint = Color(0xFFF59E0B),
+                iconBgColor = Color(0xFFFEF3C7),
+                onClick = { activeSubPage = "firebase_dashboard" },
+                testTag = "settings_firebase_dashboard_btn"
+            )
+
+            SettingsMenuCard(
+                title = translate("Local Data Backups & Restore", language),
+                subtitle = translate("Export or import local JSON/YAML backup files", language),
+                icon = Icons.Default.ImportExport,
+                iconTint = Color(0xFF2563EB),
+                iconBgColor = Color(0xFFDBEAFE),
+                onClick = { activeSubPage = "backup" },
+                testTag = "settings_backup_btn"
+            )
+
+            Text(translate("System & Maintenance", language), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF64748B), modifier = Modifier.padding(top = 16.dp, bottom = 4.dp, start = 4.dp))
+
             val aiEnabled by viewModel.aiEnabled.collectAsStateWithLifecycle()
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -217,7 +337,6 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp)
                     .testTag("settings_ai_enabled_card")
             ) {
                 Row(
@@ -268,120 +387,6 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            SettingsMenuCard(
-                title = translate("App Language", language),
-                subtitle = translate("English / Tamil option selection", language),
-                iconBgColor = Color(0xFFF1F5F9),
-                customIcon = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "A",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A)
-                        )
-                        Text(
-                            text = "அ",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A),
-                            modifier = Modifier.padding(start = 1.dp)
-                        )
-                    }
-                },
-                onClick = { activeSubPage = "language" },
-                testTag = "settings_language_btn"
-            )
-
-            SettingsMenuCard(
-                title = translate("App Font Size Option", language),
-                subtitle = translate("Normal, Medium, Large, Extra Large text choices", language),
-                iconBgColor = Color(0xFFF1F5F9),
-                customIcon = {
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "A",
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A)
-                        )
-                        Text(
-                            text = "A",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A),
-                            modifier = Modifier.padding(horizontal = 1.dp)
-                        )
-                        Text(
-                            text = "A",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A)
-                        )
-                    }
-                },
-                onClick = { activeSubPage = "font" },
-                testTag = "settings_font_btn"
-            )
-
-            SettingsMenuCard(
-                title = "Business Profile",
-                subtitle = "Manage merchant identification and notification footer text",
-                icon = Icons.Default.Home,
-                iconTint = Color(0xFF0F766E),
-                iconBgColor = Color(0xFFCCFBF1),
-                onClick = { activeSubPage = "business" },
-                testTag = "settings_business_btn"
-            )
-
-            SettingsMenuCard(
-                title = "Collection Groups (Days)",
-                subtitle = "Reorder, rename and configure active day route circles",
-                icon = Icons.Default.List,
-                iconTint = Color(0xFF7C3AED),
-                iconBgColor = Color(0xFFF3E8FF),
-                onClick = { activeSubPage = "groups" },
-                testTag = "settings_groups_btn"
-            )
-
-            SettingsMenuCard(
-                title = "SIM Card Preference",
-                subtitle = "Select outbound SMS transaction delivery slots",
-                icon = Icons.Default.SimCard,
-                iconTint = Color(0xFFD946EF),
-                iconBgColor = Color(0xFFFDF4FF),
-                onClick = { activeSubPage = "sim" },
-                testTag = "settings_sim_btn"
-            )
-
-            SettingsMenuCard(
-                title = "Message & Reminder Templates",
-                subtitle = "Customize SMS, WhatsApp confirmations and dynamic tags",
-                icon = Icons.Default.Email,
-                iconTint = Color(0xFFEA580C),
-                iconBgColor = Color(0xFFFFEDD5),
-                onClick = { activeSubPage = "templates" },
-                testTag = "settings_templates_btn"
-            )
-
-            SettingsMenuCard(
-                title = translate("Local Data Backups & Restore", language),
-                subtitle = translate("Export or import local JSON/YAML backup files", language),
-                icon = Icons.Default.ImportExport,
-                iconTint = Color(0xFF2563EB),
-                iconBgColor = Color(0xFFDBEAFE),
-                onClick = { activeSubPage = "backup" },
-                testTag = "settings_backup_btn"
-            )
-
             SettingsMenuCard(
                 title = translate("System Audit Logs", language),
                 subtitle = translate("View internal database event logs and change history", language),
@@ -393,8 +398,8 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
             )
 
             SettingsMenuCard(
-                title = "Recalibrate All Calculations",
-                subtitle = "Force fresh live calculations and verify outstanding balances for all borrow records",
+                title = translate("Recalibrate All Calculations", language),
+                subtitle = translate("Force fresh live calculations and verify outstanding balances for all borrow records", language),
                 icon = Icons.Default.Calculate,
                 iconTint = Color(0xFF0284C7),
                 iconBgColor = Color(0xFFE0F2FE),
@@ -403,26 +408,6 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                     Toast.makeText(context, "Calculations successfully recalibrated from live receipt logs!", Toast.LENGTH_SHORT).show()
                 },
                 testTag = "settings_recalibrate_btn"
-            )
-
-            SettingsMenuCard(
-                title = "System Reset & Maintenance",
-                subtitle = "Perform standard cleanups and system defaults restore",
-                icon = Icons.Default.Refresh,
-                iconTint = Color(0xFFDC2626),
-                iconBgColor = Color(0xFFFEE2E2),
-                onClick = { activeSubPage = "reset" },
-                testTag = "settings_reset_btn"
-            )
-
-            SettingsMenuCard(
-                title = translate("Device Type", language),
-                subtitle = translate("Switch between Main Device and Additional Device", language),
-                icon = Icons.Default.AccountBox,
-                iconTint = Color(0xFF8B5CF6),
-                iconBgColor = Color(0xFFEDE9FE),
-                onClick = { activeSubPage = "type_selection" },
-                testTag = "settings_user_type_btn"
             )
 
             SettingsMenuCard(
@@ -436,23 +421,13 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
             )
 
             SettingsMenuCard(
-                title = translate("Google Contacts Sync Settings", language),
-                subtitle = translate("Sync borrower contact information directly to selected Google account", language),
-                icon = Icons.Default.ContactPage,
-                iconTint = Color(0xFF3B82F6),
-                iconBgColor = Color(0xFFDBEAFE),
-                onClick = { activeSubPage = "contacts_sync" },
-                testTag = "settings_contacts_sync_btn"
-            )
-
-            SettingsMenuCard(
-                title = "Firebase Unified Operations",
-                subtitle = "Manage live Analytics, In-App Campaigns, Remote Config, Push Alerts & Diagnostics",
-                icon = Icons.Default.Cloud,
-                iconTint = Color(0xFFF59E0B),
-                iconBgColor = Color(0xFFFEF3C7),
-                onClick = { activeSubPage = "firebase_dashboard" },
-                testTag = "settings_firebase_dashboard_btn"
+                title = translate("System Reset & Maintenance", language),
+                subtitle = translate("Perform standard cleanups and system defaults restore", language),
+                icon = Icons.Default.Refresh,
+                iconTint = Color(0xFFDC2626),
+                iconBgColor = Color(0xFFFEE2E2),
+                onClick = { activeSubPage = "reset" },
+                testTag = "settings_reset_btn"
             )
 
             SettingsMenuCard(
@@ -576,8 +551,8 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
             containerColor = Color.White,
             titleContentColor = Color.Black,
             textContentColor = Color.Black,
-            title = { Text("Reset Settings & Templates?", color = appColors.primaryAccent) },
-            text = { Text("This will reset all message templates, business name, language preferences, and default weekdays list back to the original factory starting settings. This will NOT delete any customer or transaction data.", color = Color.Black) },
+            title = { Text(translate("Reset Settings & Templates?", language), color = appColors.primaryAccent) },
+            text = { Text(translate("This will reset all message templates, business name, language preferences, and default weekdays list back to the original factory starting settings. This will NOT delete any customer or transaction data.", language), color = Color.Black) },
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = appColors.primaryAccent),
@@ -587,14 +562,14 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                         Toast.makeText(context, "System settings reset to defaults!", Toast.LENGTH_SHORT).show()
                     }
                 ) {
-                    Text("Confirm Reset", color = Color.White)
+                    Text(translate("Confirm Reset", language), color = Color.White)
                 }
             },
             dismissButton = {
                 OutlinedButton(
                     onClick = { showResetSettingsDialog = false }
                 ) {
-                    Text("Cancel", color = Color.Black)
+                    Text(translate("Cancel", language), color = Color.Black)
                 }
             }
         )
@@ -606,8 +581,8 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
             containerColor = Color.White,
             titleContentColor = Color.Black,
             textContentColor = Color.Black,
-            title = { Text("DANGER: WIPE DATABASE?", color = ColorLossRed) },
-            text = { Text("This action is completely IRREVERSIBLE. It will permanently delete every single customer, loan cycle, payment history, and event logs from this phone storage. Export backup files first if you wish to preserve balances.", color = Color.Black) },
+            title = { Text(translate("DANGER: WIPE DATABASE?", language), color = ColorLossRed) },
+            text = { Text(translate("This action is completely IRREVERSIBLE. It will permanently delete every single customer, loan cycle, payment history, and event logs from this phone storage. Export backup files first if you wish to preserve balances.", language), color = Color.Black) },
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = ColorLossRed),
@@ -617,14 +592,14 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                         Toast.makeText(context, "All user data deleted permanently!", Toast.LENGTH_LONG).show()
                     }
                 ) {
-                    Text("YES, WIPE ALL DATA", color = Color.White)
+                    Text(translate("YES, WIPE ALL DATA", language), color = Color.White)
                 }
             },
             dismissButton = {
                 OutlinedButton(
                     onClick = { showClearDataDialog = false }
                 ) {
-                    Text("Cancel", color = Color.Black)
+                    Text(translate("Cancel", language), color = Color.Black)
                 }
             }
         )
@@ -669,7 +644,7 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
             containerColor = Color.White,
             titleContentColor = Color.Black,
             textContentColor = Color.Black,
-            title = { Text("Delete Collection Group: $target?", color = ColorLossRed) },
+            title = { Text(translate("Delete Collection Group: $target?", language), color = ColorLossRed) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
@@ -719,8 +694,8 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
-                                    Text("Transfer Customers to another group", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = ColorSlateDark)
-                                    Text("Safe choice. No customer data or loan records will be deleted.", fontSize = 11.sp, color = Color.Gray)
+                                    Text(translate("Transfer Customers to another group", language), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = ColorSlateDark)
+                                    Text(translate("Safe choice. No customer data or loan records will be deleted.", language), fontSize = 11.sp, color = Color.Gray)
                                 }
                             }
 
@@ -790,8 +765,8 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
-                                    Text("Bulk delete all registered customers", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = ColorLossRed)
-                                    Text("DANGER Choice. Will wipe customer records and historical loan data for this collection day.", fontSize = 11.sp, color = Color.Gray)
+                                    Text(translate("Bulk delete all registered customers", language), fontWeight = FontWeight.Bold, fontSize = 13.sp, color = ColorLossRed)
+                                    Text(translate("DANGER Choice. Will wipe customer records and historical loan data for this collection day.", language), fontSize = 11.sp, color = Color.Gray)
                                 }
                             }
                         }
@@ -813,7 +788,7 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                         Toast.makeText(context, "Successfully deleted collection group $target", Toast.LENGTH_SHORT).show()
                     }
                 ) {
-                    Text("Delete Group")
+                    Text(translate("Delete Group", language))
                 }
             },
             dismissButton = {
@@ -823,7 +798,7 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                         dayToDeleteTarget = null
                     }
                 ) {
-                    Text("Cancel")
+                    Text(translate("Cancel", language))
                 }
             }
         )
@@ -839,12 +814,12 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
             containerColor = Color.White,
             titleContentColor = Color.Black,
             textContentColor = Color.Black,
-            title = { Text("Rename Group: $target?", color = Color.Black) },
+            title = { Text(translate("Rename Group: $target?", language), color = Color.Black) },
             text = {
                 OutlinedTextField(
                     value = renameDayNewName,
                     onValueChange = { renameDayNewName = it },
-                    label = { Text("New Group Name", color = Color.Gray) },
+                    label = { Text(translate("New Group Name", language), color = Color.Gray) },
                     shape = RoundedCornerShape(8.dp),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -871,7 +846,7 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                         }
                     }
                 ) {
-                    Text("Rename")
+                    Text(translate("Rename", language))
                 }
             },
             dismissButton = {
@@ -881,7 +856,7 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                         dayToRenameTarget = null
                     }
                 ) {
-                    Text("Cancel")
+                    Text(translate("Cancel", language))
                 }
             }
         )

@@ -33,7 +33,8 @@ object CsvBackupHelper {
         customers: List<Customer>,
         loanCycles: List<LoanCycle>,
         payments: List<WeeklyPayment>,
-        dayFilter: String
+        dayFilter: String,
+        cashBalanceLogs: List<com.example.data.CashBalanceLog> = emptyList()
     ): String {
         val activeCustomers = customers.filter { it.status.uppercase() != "DELETED" }
         val validLoanCycles = loanCycles.filter { it.status.uppercase() != "DELETED" }
@@ -103,6 +104,14 @@ object CsvBackupHelper {
                     }
                     s.append(",${escapeCsv(cust.collectionDay)}\n")
                 }
+            }
+        }
+
+        if (cashBalanceLogs.isNotEmpty()) {
+            s.append("\n---CASH_BALANCE_LOGS---\n")
+            s.append("ID,Date,Actual Cash,System Cash,Collection Amount,Disbursal Amount,Expenses\n")
+            for (log in cashBalanceLogs) {
+                s.append("${log.id},${log.date},${log.actualCash},${log.systemCash},${log.collectionAmount},${log.disbursalAmount},${log.expenses}\n")
             }
         }
 
@@ -193,7 +202,11 @@ object CsvBackupHelper {
         db: AppDatabase
     ): Boolean {
         return try {
-            val rows = parseCsvRows(csvText)
+            val sections = csvText.split("---CASH_BALANCE_LOGS---")
+            val customerCsvText = sections[0]
+            val cashLogsText = if (sections.size > 1) sections[1] else ""
+
+            val rows = parseCsvRows(customerCsvText)
             if (rows.isEmpty()) throw Exception("Selected backup file is empty.")
 
             var headerIndex = -1
@@ -464,6 +477,43 @@ object CsvBackupHelper {
                                 importedActiveLoanUuids.add(finalLoanUuid)
                             }
                         }
+                    }
+                }
+
+                if (cashLogsText.isNotBlank()) {
+                    val cashRows = parseCsvRows(cashLogsText)
+                    var cashHeaderIdx = -1
+                    for (idx in cashRows.indices) {
+                        if (cashRows[idx].getOrNull(0)?.contains("ID", ignoreCase = true) == true) {
+                            cashHeaderIdx = idx
+                            break
+                        }
+                    }
+                    val cashDataRows = if (cashHeaderIdx != -1) cashRows.drop(cashHeaderIdx + 1) else cashRows
+                    
+                    if (cashDataRows.isNotEmpty() && dayGroup.trim().equals("ALL", ignoreCase = true)) {
+                        dao.deleteAllCashBalanceLogs()
+                    }
+
+                    for (cashRow in cashDataRows) {
+                        if (cashRow.isEmpty() || cashRow[0].isBlank()) continue
+                        val cDate = cashRow.getOrNull(1)?.toLongOrNull() ?: continue
+                        val cActual = cashRow.getOrNull(2)?.toDoubleOrNull() ?: 0.0
+                        val cSystem = cashRow.getOrNull(3)?.toDoubleOrNull() ?: 0.0
+                        val cCollection = cashRow.getOrNull(4)?.toDoubleOrNull() ?: 0.0
+                        val cDisbursal = cashRow.getOrNull(5)?.toDoubleOrNull() ?: 0.0
+                        val cExpenses = cashRow.getOrNull(6)?.toDoubleOrNull() ?: 0.0
+                        dao.insertCashBalanceLog(
+                            com.example.data.CashBalanceLog(
+                                id = 0,
+                                date = cDate,
+                                actualCash = cActual,
+                                systemCash = cSystem,
+                                collectionAmount = cCollection,
+                                disbursalAmount = cDisbursal,
+                                expenses = cExpenses
+                            )
+                        )
                     }
                 }
 

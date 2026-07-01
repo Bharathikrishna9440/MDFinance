@@ -112,12 +112,14 @@ object FirebaseUpdateManager {
                             val customersList = db.collectionDao().getAllCustomersOnce()
                             val loanCyclesList = db.collectionDao().getAllLoanCyclesOnce()
                             val paymentsList = db.collectionDao().getAllPaymentsOnce()
+                            val cashBalanceLogsList = db.collectionDao().getAllCashBalanceLogsOnce()
 
                             val csvString = com.example.util.CsvBackupHelper.generateCsvString(
                                 customers = customersList,
                                 loanCycles = loanCyclesList,
                                 payments = paymentsList,
-                                dayFilter = "ALL"
+                                dayFilter = "ALL",
+                                cashBalanceLogs = cashBalanceLogsList
                             )
 
                             val backupDir = File(context.filesDir, "update_backups")

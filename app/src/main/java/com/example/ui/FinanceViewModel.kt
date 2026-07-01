@@ -139,6 +139,9 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     private val _isLoggedIn = MutableStateFlow(if (bypassLogin) true else prefs.getBoolean("is_logged_in", false))
     val isLoggedIn = _isLoggedIn.asStateFlow()
 
+    private val _isDemoMode = MutableStateFlow(prefs.getBoolean("is_demo_mode", false))
+    val isDemoMode = _isDemoMode.asStateFlow()
+
     private val _currentUser = MutableStateFlow(if (bypassLogin) com.example.util.SecureConfig.adminUsername.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() } else (prefs.getString("current_user", "") ?: ""))
     val currentUser = _currentUser.asStateFlow()
 
@@ -1352,6 +1355,10 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     private var firebaseListener: ValueEventListener? = null
 
     fun startFirebaseSyncListening() {
+        if (_isDemoMode.value) {
+            _firebaseSyncStatus.value = "Demo Mode (Offline)"
+            return
+        }
         try {
             val rtdb = FirebaseDatabase.getInstance(com.example.util.SecureConfig.firebaseDatabaseUrl)
             val ref = rtdb.getReference("ledger_csv")
@@ -1432,12 +1439,14 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 val customersList = db.collectionDao().getAllCustomersOnce()
                 val loanCyclesList = db.collectionDao().getAllLoanCyclesOnce()
                 val paymentsList = db.collectionDao().getAllPaymentsOnce()
+                val cashBalanceLogsList = db.collectionDao().getAllCashBalanceLogsOnce()
 
                 val csvString = com.example.util.CsvBackupHelper.generateCsvString(
                     customers = customersList,
                     loanCycles = loanCyclesList,
                     payments = paymentsList,
-                    dayFilter = "ALL"
+                    dayFilter = "ALL",
+                    cashBalanceLogs = cashBalanceLogsList
                 )
                 val rtdb = FirebaseDatabase.getInstance(com.example.util.SecureConfig.firebaseDatabaseUrl)
                 val ref = rtdb.getReference("ledger_csv")
@@ -1466,12 +1475,14 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 val customersList = db.collectionDao().getAllCustomersOnce()
                 val loanCyclesList = db.collectionDao().getAllLoanCyclesOnce()
                 val paymentsList = db.collectionDao().getAllPaymentsOnce()
+                val cashBalanceLogsList = db.collectionDao().getAllCashBalanceLogsOnce()
 
                 val csvString = com.example.util.CsvBackupHelper.generateCsvString(
                     customers = customersList,
                     loanCycles = loanCyclesList,
                     payments = paymentsList,
-                    dayFilter = "ALL"
+                    dayFilter = "ALL",
+                    cashBalanceLogs = cashBalanceLogsList
                 )
                 val rtdb = FirebaseDatabase.getInstance(com.example.util.SecureConfig.firebaseDatabaseUrl)
                 val ref = rtdb.getReference("ledger_csv")
@@ -1498,8 +1509,9 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 apply()
             }
             _isLoggedIn.value = true
+            _isDemoMode.value = true
             _currentUser.value = "Demo"
-            _currentUserRole.value = "USER"
+            _currentUserRole.value = "ADMIN"
             _username.value = "Demo"
             AppDatabase.resetDatabaseInstances()
             (context as? android.app.Activity)?.recreate()
@@ -1509,13 +1521,14 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             prefs.edit().apply {
                 putBoolean("is_logged_in", true)
                 putString("current_user", capUsername)
-                putString("current_role", "USER")
+                putString("current_role", "ADMIN")
                 putBoolean("is_demo_mode", false)
                 apply()
             }
             _isLoggedIn.value = true
+            _isDemoMode.value = false
             _currentUser.value = capUsername
-            _currentUserRole.value = "USER"
+            _currentUserRole.value = "ADMIN"
             _username.value = capUsername
             AppDatabase.resetDatabaseInstances()
             (context as? android.app.Activity)?.recreate()
@@ -1534,6 +1547,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             apply()
         }
         _isLoggedIn.value = false
+        _isDemoMode.value = false
         _currentUser.value = ""
         _username.value = ""
         _hasCompletedDeviceSetup.value = false
@@ -1557,28 +1571,42 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     ) {
         viewModelScope.launch {
             if (role == "ADMIN") {
-                if (uriString == null) {
-                    onError("No import file selected")
-                    return@launch
-                }
                 _isExportImportLoading.value = true
                 try {
                     val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                         try {
-                            val uri = android.net.Uri.parse(uriString)
-                            val contentResolver = context.contentResolver
-                            val inputStream = contentResolver.openInputStream(uri) ?: throw Exception("Could not open backup file")
+                            var stringContent = ""
+                            if (uriString != null) {
+                                val uri = android.net.Uri.parse(uriString)
+                                val contentResolver = context.contentResolver
+                                val inputStream = contentResolver.openInputStream(uri) ?: throw Exception("Could not open backup file")
+                                val bytes = inputStream.readBytes()
+                                stringContent = String(bytes, java.nio.charset.StandardCharsets.UTF_8).trim()
+                            } else {
+                                if (_isDemoMode.value) {
+                                    stringContent = "" // allow empty in demo mode
+                                } else {
+                                    val rtdb = FirebaseDatabase.getInstance(com.example.util.SecureConfig.firebaseDatabaseUrl)
+                                    val ref = rtdb.getReference("ledger_csv")
+                                    val snapshot = com.google.android.gms.tasks.Tasks.await(ref.get())
+                                    val cloudCsv = snapshot.value as? String
+                                    if (cloudCsv.isNullOrBlank()) {
+                                        throw Exception("No backup file selected and no backup found in Cloud.")
+                                    }
+                                    stringContent = cloudCsv.trim()
+                                }
+                            }
 
-                            val bytes = inputStream.readBytes()
-                            val stringContent = String(bytes, java.nio.charset.StandardCharsets.UTF_8).trim()
-
-                            // 1. Import locally
-                            val success = com.example.util.CsvBackupHelper.importCsvIntoDay(
-                                context = context,
-                                csvText = stringContent,
-                                dayGroup = "ALL",
-                                db = db
-                            )
+                            var success = true
+                            if (stringContent.isNotBlank()) {
+                                // 1. Import locally
+                                success = com.example.util.CsvBackupHelper.importCsvIntoDay(
+                                    context = context,
+                                    csvText = stringContent,
+                                    dayGroup = "ALL",
+                                    db = db
+                                )
+                            }
 
                             if (success) {
                                 triggerDatabaseRescanAndRepair()
@@ -1587,12 +1615,14 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                                 val customersList = db.collectionDao().getAllCustomersOnce()
                                 val loanCyclesList = db.collectionDao().getAllLoanCyclesOnce()
                                 val paymentsList = db.collectionDao().getAllPaymentsOnce()
+                                val cashBalanceLogsList = db.collectionDao().getAllCashBalanceLogsOnce()
 
                                 val csvString = com.example.util.CsvBackupHelper.generateCsvString(
                                     customers = customersList,
                                     loanCycles = loanCyclesList,
                                     payments = paymentsList,
-                                    dayFilter = "ALL"
+                                    dayFilter = "ALL",
+                                    cashBalanceLogs = cashBalanceLogsList
                                 )
                                 
                                 if (!offlineModeEnabled.value) {
@@ -1984,6 +2014,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                         db.collectionDao().deleteAllPayments()
                         db.collectionDao().deleteAllLoanCycles()
                         db.collectionDao().deleteAllCustomers()
+                        db.collectionDao().deleteAllCashBalanceLogs()
                     }
                     true
                 }
@@ -2071,6 +2102,10 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun forceUploadLocalMasterToCloud(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        if (_isDemoMode.value) {
+            onError("Upload is disabled in Offline Tester Mode.")
+            return
+        }
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val currentLoggedInUser = currentUser.value.trim()
@@ -2521,12 +2556,14 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             val customersList = db.collectionDao().getAllCustomersOnce()
             val loanCyclesList = db.collectionDao().getAllLoanCyclesOnce()
             val paymentsList = db.collectionDao().getAllPaymentsOnce()
+            val cashBalanceLogsList = db.collectionDao().getAllCashBalanceLogsOnce()
 
             val csvContent = com.example.util.CsvBackupHelper.generateCsvString(
                 customers = customersList,
                 loanCycles = loanCyclesList,
                 payments = paymentsList,
-                dayFilter = "ALL"
+                dayFilter = "ALL",
+                cashBalanceLogs = cashBalanceLogsList
             )
 
             val (success, responseString) = uploadCsvToGoogleScript(csvContent, isManual = false)
@@ -2597,12 +2634,14 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 val customersList = db.collectionDao().getAllCustomersOnce()
                 val loanCyclesList = db.collectionDao().getAllLoanCyclesOnce()
                 val paymentsList = db.collectionDao().getAllPaymentsOnce()
+                val cashBalanceLogsList = db.collectionDao().getAllCashBalanceLogsOnce()
 
                 val csvContent = com.example.util.CsvBackupHelper.generateCsvString(
                     customers = customersList,
                     loanCycles = loanCyclesList,
                     payments = paymentsList,
-                    dayFilter = "ALL"
+                    dayFilter = "ALL",
+                    cashBalanceLogs = cashBalanceLogsList
                 )
 
                 _googleDriveBackupStatusMessage.value = "Uploading to Google Drive..."
@@ -2919,6 +2958,12 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     ) {
         viewModelScope.launch {
             if (currentUserRole.value == "USER") return@launch
+            val noPhone = phone.trim().isEmpty()
+            val finalSmsWeekly = if (noPhone) false else smsWeeklyReminder
+            val finalSmsConf = if (noPhone) false else smsConfirmationOfEntry
+            val finalAutoSms = if (noPhone) false else autoWeeklySms
+            val finalAutoWa = if (noPhone) false else autoWeeklyWhatsapp
+
             val maxOrder = allCustomers.value.maxOfOrNull { it.customOrder } ?: 0
             val cust = Customer(
                 name = name,
@@ -2926,10 +2971,10 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 customOrder = maxOrder + 1,
                 collectionDay = collectionDay,
                 city = city,
-                smsWeeklyReminder = smsWeeklyReminder,
-                smsConfirmationOfEntry = smsConfirmationOfEntry,
-                autoWeeklySms = autoWeeklySms,
-                autoWeeklyWhatsapp = autoWeeklyWhatsapp,
+                smsWeeklyReminder = finalSmsWeekly,
+                smsConfirmationOfEntry = finalSmsConf,
+                autoWeeklySms = finalAutoSms,
+                autoWeeklyWhatsapp = finalAutoWa,
                 upiNameAlias = upiNameAlias,
                 preferredLanguage = preferredLanguage
             )
@@ -3345,16 +3390,22 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             if (currentUserRole.value == "USER") return@launch
             val existing = repository.getCustomerById(customerId)
             if (existing != null) {
+                val noPhone = phone.trim().isEmpty()
+                val finalSmsWeekly = if (noPhone) false else smsWeeklyReminder
+                val finalSmsConf = if (noPhone) false else smsConfirmationOfEntry
+                val finalAutoSms = if (noPhone) false else autoWeeklySms
+                val finalAutoWa = if (noPhone) false else autoWeeklyWhatsapp
+
                 val previousJson = customerToJson(existing)
                 val updatedObj = existing.copy(
                     name = name,
                     phone = phone,
                     collectionDay = collectionDay,
                     city = city,
-                    smsWeeklyReminder = smsWeeklyReminder,
-                    smsConfirmationOfEntry = smsConfirmationOfEntry,
-                    autoWeeklySms = autoWeeklySms,
-                    autoWeeklyWhatsapp = autoWeeklyWhatsapp,
+                    smsWeeklyReminder = finalSmsWeekly,
+                    smsConfirmationOfEntry = finalSmsConf,
+                    autoWeeklySms = finalAutoSms,
+                    autoWeeklyWhatsapp = finalAutoWa,
                     upiNameAlias = upiNameAlias,
                     preferredLanguage = preferredLanguage
                 )
@@ -4094,7 +4145,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         val globalTodayDeductions = allLoans
             .filter { it.startDate >= startOfToday }
             .sumOf { it.deduction }
-        val globalTodayInterest = globalTodayDeductions + payments
+        val globalTodayInterest = payments
             .filter { it.paymentDate >= startOfToday }
             .sumOf { p ->
                 val loan = loanMap[p.loanCycleId]
@@ -4111,7 +4162,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         val groupTodayDeductions = groupAllLoans
             .filter { it.startDate >= startOfToday }
             .sumOf { it.deduction }
-        val groupTodayInterest = groupTodayDeductions + payments
+        val groupTodayInterest = payments
             .filter { it.paymentDate >= startOfToday && it.loanCycleId in groupLoanCycleIds }
             .sumOf { p ->
                 val loan = loanMap[p.loanCycleId]
@@ -4148,7 +4199,9 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             outstandingPrincipal = oPrincipal,
             outstandingInterest = oInterest,
             todaysInterestAmount = globalTodayInterest,
-            groupTodaysInterestAmount = groupTodayInterest
+            groupTodaysInterestAmount = groupTodayInterest,
+            todaysDeductionsAmount = globalTodayDeductions,
+            groupTodaysDeductionsAmount = groupTodayDeductions
         )
     }
     .flowOn(kotlinx.coroutines.Dispatchers.IO)
@@ -4169,18 +4222,24 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun exportCsvGroupBackup(context: android.content.Context, groupName: String) {
+        if (_isDemoMode.value) {
+            android.widget.Toast.makeText(context, "Export is disabled in Offline Tester Mode.", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
         viewModelScope.launch {
             _isExportImportLoading.value = true
             try {
                 val customersList = db.collectionDao().getAllCustomersOnce()
                 val loanCyclesList = db.collectionDao().getAllLoanCyclesOnce()
                 val paymentsList = db.collectionDao().getAllPaymentsOnce()
+                val cashBalanceLogsList = db.collectionDao().getAllCashBalanceLogsOnce()
 
                 val csvContent = com.example.util.CsvBackupHelper.generateCsvString(
                     customers = customersList,
                     loanCycles = loanCyclesList,
                     payments = paymentsList,
-                    dayFilter = groupName
+                    dayFilter = groupName,
+                    cashBalanceLogs = cashBalanceLogsList
                 )
 
                 val destinationFile = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -4237,6 +4296,10 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
+        if (_isDemoMode.value) {
+            onError("Import is disabled in Offline Tester Mode.")
+            return
+        }
         viewModelScope.launch {
             _isExportImportLoading.value = true
             try {
@@ -4279,6 +4342,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                     db.collectionDao().deleteAllLoanCycles()
                     db.collectionDao().deleteAllCustomers()
                     db.collectionDao().deleteAllEditLogs()
+                    db.collectionDao().deleteAllCashBalanceLogs()
                 }
                 
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
@@ -4430,6 +4494,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         val allL = db.collectionDao().getAllLoanCyclesOnce()
         val valP = db.collectionDao().getAllPaymentsOnce()
         val allA = db.collectionDao().getAllEditLogsOnce()
+        val allCash = db.collectionDao().getAllCashBalanceLogsOnce()
 
         val isSelective = !collectionGroup.isNullOrBlank() && collectionGroup != "All Groups (Full Backup)"
 
@@ -4529,6 +4594,24 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         // DONT EXPORT EDIT LOG JUST CUSTOMER DATA ONLY:
         // Edit logs are completely excluded from exported backups as requested by the user
         backupObj.put("editLogs", editLogsArray)
+        
+        val cashBalanceLogsArray = org.json.JSONArray()
+        if (!isSelective) {
+            for (cashLog in allCash) {
+                val obj = org.json.JSONObject().apply {
+                    put("id", cashLog.id)
+                    put("date", cashLog.date)
+                    put("actualCash", cashLog.actualCash)
+                    put("systemCash", cashLog.systemCash)
+                    put("collectionAmount", cashLog.collectionAmount)
+                    put("disbursalAmount", cashLog.disbursalAmount)
+                    put("expenses", cashLog.expenses)
+                }
+                cashBalanceLogsArray.put(obj)
+            }
+        }
+        backupObj.put("cashBalanceLogs", cashBalanceLogsArray)
+
         backupObj.put("backup_scope", collectionGroup ?: "All Groups (Full Backup)")
 
         val prefsObj = org.json.JSONObject().apply {
@@ -4683,6 +4766,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 db.collectionDao().deleteAllLoanCycles()
                 db.collectionDao().deleteAllCustomers()
                 db.collectionDao().deleteAllEditLogs()
+                db.collectionDao().deleteAllCashBalanceLogs()
             }
 
             // Map to store oldCustomerId -> newCustomerId to prevent primary key clashing between daily lists during import
@@ -4853,6 +4937,23 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                     uuid = java.util.UUID.randomUUID().toString()
                 )
             )
+            // Restore Cash Balance Logs if full restore and not partial
+            if (incomingGroups.isEmpty()) {
+                val cashBalanceLogsArray = backupObj.optJSONArray("cashBalanceLogs") ?: org.json.JSONArray()
+                for (i in 0 until cashBalanceLogsArray.length()) {
+                    val cObj = cashBalanceLogsArray.getJSONObject(i)
+                    val newCashLog = com.example.data.CashBalanceLog(
+                        id = 0,
+                        date = cObj.optLong("date", System.currentTimeMillis()),
+                        actualCash = cObj.optDouble("actualCash", 0.0),
+                        systemCash = cObj.optDouble("systemCash", 0.0),
+                        collectionAmount = cObj.optDouble("collectionAmount", 0.0),
+                        disbursalAmount = cObj.optDouble("disbursalAmount", 0.0),
+                        expenses = cObj.optDouble("expenses", 0.0)
+                    )
+                    db.collectionDao().insertCashBalanceLog(newCashLog)
+                }
+            }
         }
 
         // 3. Preferences deserialization - non-destructive update to global properties
@@ -5394,6 +5495,24 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                         uuid = java.util.UUID.randomUUID().toString()
                     )
                 )
+                // Restore Cash Balance Logs
+                val cashBalanceLogsArray = backupObj.optJSONArray("cashBalanceLogs")
+                if (cashBalanceLogsArray != null) {
+                    db.collectionDao().deleteAllCashBalanceLogs()
+                    for (i in 0 until cashBalanceLogsArray.length()) {
+                        val cObj = cashBalanceLogsArray.getJSONObject(i)
+                        val newCashLog = com.example.data.CashBalanceLog(
+                            id = 0,
+                            date = cObj.optLong("date", System.currentTimeMillis()),
+                            actualCash = cObj.optDouble("actualCash", 0.0),
+                            systemCash = cObj.optDouble("systemCash", 0.0),
+                            collectionAmount = cObj.optDouble("collectionAmount", 0.0),
+                            disbursalAmount = cObj.optDouble("disbursalAmount", 0.0),
+                            expenses = cObj.optDouble("expenses", 0.0)
+                        )
+                        db.collectionDao().insertCashBalanceLog(newCashLog)
+                    }
+                }
             }
 
             // 3. Preferences deserialization - non-destructive update to global properties
@@ -6021,6 +6140,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             putBoolean("is_demo_mode", false)
             apply()
         }
+        _isDemoMode.value = false
         AppDatabase.resetDatabaseInstances()
         (context as? android.app.Activity)?.recreate()
     }
@@ -6049,5 +6169,7 @@ data class DashboardStats(
     val outstandingPrincipal: Double = 0.0,
     val outstandingInterest: Double = 0.0,
     val todaysInterestAmount: Double = 0.0,
-    val groupTodaysInterestAmount: Double = 0.0
+    val groupTodaysInterestAmount: Double = 0.0,
+    val todaysDeductionsAmount: Double = 0.0,
+    val groupTodaysDeductionsAmount: Double = 0.0
 )

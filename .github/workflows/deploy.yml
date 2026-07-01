@@ -51,3 +51,59 @@ jobs:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           file: app/build/outputs/apk/release/app-release.apk
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Upload APK to Firebase Storage & Update RTDB
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          VERSION_CODE: ${{ steps.versioning.outputs.version_code }}
+          VERSION_NAME: ${{ steps.versioning.outputs.version_name }}
+        run: |
+          npm install firebase-admin
+          node -e "
+          const admin = require('firebase-admin');
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+          
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            storageBucket: 'md-finance-2007.firebasestorage.app',
+            databaseURL: 'https://collection-app-2007-default-rtdb.asia-southeast1.firebasedatabase.app'
+          });
+          
+          const bucket = admin.storage().bucket();
+          const db = admin.database();
+          const versionCode = parseInt(process.env.VERSION_CODE);
+          const versionName = process.env.VERSION_NAME;
+          const apkPath = 'app/build/outputs/apk/release/app-release.apk';
+          const destination = 'updates/app-release-' + versionCode + '.apk';
+          const token = require('crypto').randomUUID();
+          
+          bucket.upload(apkPath, {
+            destination: destination,
+            metadata: {
+              metadata: {
+                firebaseStorageDownloadTokens: token
+              }
+            }
+          }).then((data) => {
+            const file = data[0];
+            const downloadUrl = 'https://firebasestorage.googleapis.com/v0/b/' + bucket.name + '/o/' + encodeURIComponent(file.name) + '?alt=media&token=' + token;
+            console.log('Uploaded APK to: ' + downloadUrl);
+            
+            return db.ref('update_config').set({
+              versionId: versionCode,
+              versionName: versionName,
+              apkFileId: downloadUrl
+            });
+          }).then(() => {
+            console.log('Firebase RTDB updated successfully.');
+            process.exit(0);
+          }).catch((err) => {
+            console.error('Error:', err);
+            process.exit(1);
+          });
+          "

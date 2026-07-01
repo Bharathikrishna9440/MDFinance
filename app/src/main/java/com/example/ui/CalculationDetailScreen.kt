@@ -39,15 +39,22 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 data class PaymentDetailItem(
+    val paymentId: Int,
+    val loanCycleId: Int,
+    val paymentDate: Long,
+    val customerId: Int,
     val customerName: String,
     val customerCode: String,
     val amount: Double,
     val weekNumber: Int,
     val notes: String,
-    val upiTxnId: String?
+    val upiTxnId: String?,
+    val customOrder: Int
 )
 
 data class DisbursalDetailItem(
+    val loanCycleId: Int,
+    val customerId: Int,
     val customerName: String,
     val customerCode: String,
     val loanAmount: Double,
@@ -55,15 +62,20 @@ data class DisbursalDetailItem(
     val actualDisbursed: Double,
     val interestAmount: Double,
     val weeklyAmount: Double,
-    val tenureWeeks: Int
+    val tenureWeeks: Int,
+    val customOrder: Int
 )
 
 data class ProfitDetailItem(
+    val loanCycleId: Int?,
+    val paymentId: Int?,
+    val customerId: Int,
     val customerName: String,
     val customerCode: String,
     val source: String,
     val amount: Double,
-    val details: String
+    val details: String,
+    val customOrder: Int
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,6 +117,7 @@ fun CalculationDetailScreen(
     val screenTitle = when (type) {
         "COLLECTION" -> translate("Today's Collections", language)
         "DISBURSAL" -> translate("Today's Disbursals", language)
+        "DEDUCTIONS" -> translate("Today's Deductions", language)
         else -> translate("Today's Profit", language)
     }
 
@@ -155,19 +168,24 @@ fun CalculationDetailScreen(
                     paymentsToday.filter { p ->
                         val l = allLoanCycles.find { it.id == p.loanCycleId } ?: return@filter false
                         val c = allCustomers.find { it.id == l.customerId } ?: return@filter false
-                        isHome || c.collectionDay.trim().equals(day.trim(), ignoreCase = true)
+                        (isHome || c.collectionDay.trim().equals(day.trim(), ignoreCase = true)) && p.amountPaid > 0.0
                     }.map { p ->
                         val l = allLoanCycles.find { it.id == p.loanCycleId }!!
                         val c = allCustomers.find { it.id == l.customerId }!!
                         PaymentDetailItem(
+                            paymentId = p.id,
+                            loanCycleId = l.id,
+                            paymentDate = p.paymentDate,
+                            customerId = c.id,
                             customerName = c.name,
                             customerCode = c.customerCode,
                             amount = p.amountPaid,
                             weekNumber = p.weekNumber,
                             notes = p.notes,
-                            upiTxnId = p.upiTxnId
+                            upiTxnId = p.upiTxnId,
+                            customOrder = c.customOrder
                         )
-                    }
+                    }.sortedBy { it.customOrder }
                 }
 
                 val totalSum = filteredPayments.sumOf { it.amount }
@@ -177,7 +195,8 @@ fun CalculationDetailScreen(
                     totalSum = totalSum,
                     padding = innerPadding,
                     appColors = appColors,
-                    language = language
+                    language = language,
+                    viewModel = viewModel
                 )
             }
             "DISBURSAL" -> {
@@ -188,6 +207,8 @@ fun CalculationDetailScreen(
                     }.map { l ->
                         val c = allCustomers.find { it.id == l.customerId }!!
                         DisbursalDetailItem(
+                            loanCycleId = l.id,
+                            customerId = c.id,
                             customerName = c.name,
                             customerCode = c.customerCode,
                             loanAmount = l.loanAmount,
@@ -195,9 +216,10 @@ fun CalculationDetailScreen(
                             actualDisbursed = l.loanAmount - l.deduction,
                             interestAmount = l.interestAmount,
                             weeklyAmount = l.weeklyAmount,
-                            tenureWeeks = l.totalWeeks
+                            tenureWeeks = l.totalWeeks,
+                            customOrder = c.customOrder
                         )
-                    }
+                    }.sortedBy { it.customOrder }
                 }
 
                 val totalSum = filteredLoans.sumOf { it.actualDisbursed }
@@ -207,26 +229,45 @@ fun CalculationDetailScreen(
                     totalSum = totalSum,
                     padding = innerPadding,
                     appColors = appColors,
-                    language = language
+                    language = language,
+                    viewModel = viewModel
                 )
             }
-            else -> { // PROFIT
-                val filteredProfitItems = remember(loansToday, paymentsToday, allCustomers, allLoanCycles, day, isHome) {
-                    val profitDeductions = loansToday.filter { l ->
+            "DEDUCTIONS" -> {
+                val filteredItems = remember(loansToday, allCustomers, day, isHome) {
+                    loansToday.filter { l ->
                         val c = allCustomers.find { it.id == l.customerId } ?: return@filter false
                         (isHome || c.collectionDay.trim().equals(day.trim(), ignoreCase = true)) && l.deduction > 0.0
                     }.map { l ->
                         val c = allCustomers.find { it.id == l.customerId }!!
                         ProfitDetailItem(
+                            loanCycleId = l.id,
+                            paymentId = null,
+                            customerId = c.id,
                             customerName = c.name,
                             customerCode = c.customerCode,
                             source = "Upfront Deduction",
                             amount = l.deduction,
-                            details = "Upfront realized interest on ₹${l.loanAmount.toLong()} loan cycle"
+                            details = "Upfront realized interest on ₹${l.loanAmount.toLong()} loan cycle",
+                            customOrder = c.customOrder
                         )
-                    }
+                    }.sortedBy { it.customOrder }
+                }
 
-                    val profitPayments = paymentsToday.filter { p ->
+                val totalSum = filteredItems.sumOf { it.amount }
+                ProfitDetailLayout(
+                    items = filteredItems,
+                    totalSum = totalSum,
+                    padding = innerPadding,
+                    appColors = appColors,
+                    language = language,
+                    viewModel = viewModel,
+                    title = translate("TOTAL DEDUCTIONS", language)
+                )
+            }
+            else -> { // PROFIT
+                val filteredProfitItems = remember(paymentsToday, allCustomers, allLoanCycles, day, isHome) {
+                    paymentsToday.filter { p ->
                         val l = allLoanCycles.find { it.id == p.loanCycleId } ?: return@filter false
                         val c = allCustomers.find { it.id == l.customerId } ?: return@filter false
                         isHome || c.collectionDay.trim().equals(day.trim(), ignoreCase = true)
@@ -237,15 +278,17 @@ fun CalculationDetailScreen(
                         val ratio = if (total > 0.0) l.interestAmount / total else 0.0
                         val interestPortion = p.amountPaid * ratio
                         ProfitDetailItem(
+                            loanCycleId = l.id,
+                            paymentId = p.id,
+                            customerId = c.id,
                             customerName = c.name,
                             customerCode = c.customerCode,
                             source = "Collected Interest Share",
                             amount = interestPortion,
-                            details = "Interest component of ₹${p.amountPaid.toLong()} instalment payment"
+                            details = "Interest component of ₹${p.amountPaid.toLong()} instalment payment",
+                            customOrder = c.customOrder
                         )
-                    }.filter { it.amount > 0.0 }
-
-                    profitDeductions + profitPayments
+                    }.filter { it.amount > 0.0 }.sortedBy { it.customOrder }
                 }
 
                 val totalSum = filteredProfitItems.sumOf { it.amount }
@@ -255,7 +298,9 @@ fun CalculationDetailScreen(
                     totalSum = totalSum,
                     padding = innerPadding,
                     appColors = appColors,
-                    language = language
+                    language = language,
+                    viewModel = viewModel,
+                    title = translate("TOTAL REALIZED PROFIT", language)
                 )
             }
         }
@@ -268,8 +313,60 @@ fun CollectionDetailLayout(
     totalSum: Double,
     padding: PaddingValues,
     appColors: AppThemeColors,
-    language: String
+    language: String,
+    viewModel: FinanceViewModel
 ) {
+    var showEditDialog by remember { mutableStateOf<PaymentDetailItem?>(null) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    if (showEditDialog != null) {
+        val item = showEditDialog!!
+        var editAmount by remember { mutableStateOf(if (item.amount % 1.0 == 0.0) item.amount.toInt().toString() else item.amount.toString()) }
+        var editNotes by remember { mutableStateOf(item.notes) }
+
+        AlertDialog(
+            onDismissRequest = { showEditDialog = null },
+            title = { Text(translate("Edit Payment", language)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = editAmount,
+                        onValueChange = { editAmount = it },
+                        label = { Text(translate("Amount", language)) },
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                    )
+                    OutlinedTextField(
+                        value = editNotes,
+                        onValueChange = { editNotes = it },
+                        label = { Text(translate("Notes", language)) }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val amount = editAmount.toDoubleOrNull() ?: item.amount
+                    viewModel.editWeeklyPayment(
+                        context = context,
+                        paymentId = item.paymentId,
+                        loanCycleId = item.loanCycleId,
+                        amount = amount,
+                        weekNum = item.weekNumber,
+                        paymentDate = item.paymentDate,
+                        notes = editNotes
+                    )
+                    showEditDialog = null
+                }) {
+                    Text(translate("Save", language))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = null }) {
+                    Text(translate("Cancel", language))
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -376,7 +473,9 @@ fun CollectionDetailLayout(
             ) {
                 items(items) { item ->
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showEditDialog = item },
                         colors = CardDefaults.cardColors(
                             containerColor = if (appColors.isDark) Color(0xFF1E293B) else Color.White
                         ),
@@ -390,13 +489,33 @@ fun CollectionDetailLayout(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = item.customerName,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = if (appColors.isDark) Color.White else Color.Black
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Surface(
+                                        color = if (appColors.isDark) Color(0xFF334155) else Color(0xFFE2E8F0),
+                                        shape = CircleShape
+                                    ) {
+                                        Text(
+                                            text = "${item.customOrder}",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (appColors.isDark) Color.LightGray else Color.DarkGray,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                    Text(
+                                        text = item.customerName,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = if (appColors.isDark) Color(0xFF60A5FA) else Color(0xFF2563EB),
+                                        modifier = Modifier.clickable {
+                                            viewModel.navigateTo(Screen.CustomerDetail(item.customerId))
+                                        }.padding(vertical = 4.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -450,7 +569,8 @@ fun DisbursalDetailLayout(
     totalSum: Double,
     padding: PaddingValues,
     appColors: AppThemeColors,
-    language: String
+    language: String,
+    viewModel: FinanceViewModel
 ) {
     Column(
         modifier = Modifier
@@ -575,12 +695,32 @@ fun DisbursalDetailLayout(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = item.customerName,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp,
-                                        color = if (appColors.isDark) Color.White else Color.Black
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Surface(
+                                            color = if (appColors.isDark) Color(0xFF334155) else Color(0xFFE2E8F0),
+                                            shape = CircleShape
+                                        ) {
+                                            Text(
+                                                text = "${item.customOrder}",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (appColors.isDark) Color.LightGray else Color.DarkGray,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                        Text(
+                                            text = item.customerName,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp,
+                                            color = if (appColors.isDark) Color(0xFF60A5FA) else Color(0xFF2563EB),
+                                            modifier = Modifier.clickable {
+                                                viewModel.navigateTo(Screen.CustomerDetail(item.customerId))
+                                            }.padding(vertical = 4.dp)
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Surface(
                                         color = (if (appColors.isDark) Color(0xFF475569) else Color(0xFFF1F5F9)),
@@ -601,7 +741,10 @@ fun DisbursalDetailLayout(
                                         text = "₹ ${String.format(Locale.US, "%,.0f", item.actualDisbursed)}",
                                         fontWeight = FontWeight.ExtraBold,
                                         fontSize = 16.sp,
-                                        color = Color(0xFFEF4444)
+                                        color = Color(0xFFEF4444),
+                                        modifier = Modifier.clickable {
+                                            viewModel.navigateTo(Screen.EditLoan(item.loanCycleId))
+                                        }.padding(4.dp)
                                     )
                                     Text(
                                         text = translate("Net Disbursed", language),
@@ -650,7 +793,9 @@ fun ProfitDetailLayout(
     totalSum: Double,
     padding: PaddingValues,
     appColors: AppThemeColors,
-    language: String
+    language: String,
+    viewModel: FinanceViewModel,
+    title: String = translate("TOTAL REALIZED PROFIT", language)
 ) {
     Column(
         modifier = Modifier
@@ -678,7 +823,7 @@ fun ProfitDetailLayout(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = translate("TOTAL REALIZED PROFIT", language),
+                        text = title,
                         color = Color.LightGray,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
@@ -709,7 +854,7 @@ fun ProfitDetailLayout(
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
-                                text = "${items.size} " + translate("Profit Elements Today", language),
+                                text = "${items.size} " + translate("Elements Today", language),
                                 color = Color(0xFFA855F7),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
@@ -721,7 +866,7 @@ fun ProfitDetailLayout(
         }
 
         Text(
-            text = translate("Profit Generation Log", language),
+            text = translate("Generation Log", language),
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
             color = if (appColors.isDark) Color.White else Color.Black,
@@ -743,7 +888,7 @@ fun ProfitDetailLayout(
                         modifier = Modifier.size(48.dp)
                     )
                     Text(
-                        text = translate("No profit recorded today.", language),
+                        text = translate("No items recorded today.", language),
                         color = Color.Gray,
                         fontSize = 14.sp
                     )
@@ -776,11 +921,26 @@ fun ProfitDetailLayout(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
+                                    Surface(
+                                        color = if (appColors.isDark) Color(0xFF334155) else Color(0xFFE2E8F0),
+                                        shape = CircleShape
+                                    ) {
+                                        Text(
+                                            text = "${item.customOrder}",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (appColors.isDark) Color.LightGray else Color.DarkGray,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
                                     Text(
                                         text = item.customerName,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp,
-                                        color = if (appColors.isDark) Color.White else Color.Black
+                                        color = if (appColors.isDark) Color(0xFF60A5FA) else Color(0xFF2563EB),
+                                        modifier = Modifier.clickable {
+                                            viewModel.navigateTo(Screen.CustomerDetail(item.customerId))
+                                        }.padding(vertical = 4.dp)
                                     )
                                     Surface(
                                         color = if (item.source.contains("Deduction")) Color(0xFFA855F7).copy(alpha = 0.15f) else Color(0xFF22C55E).copy(alpha = 0.15f),
@@ -825,7 +985,16 @@ fun ProfitDetailLayout(
                                 text = "₹ ${String.format(Locale.US, "%,.1f", item.amount)}",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
-                                color = Color(0xFFA855F7)
+                                color = Color(0xFFA855F7),
+                                modifier = Modifier.clickable {
+                                    if (item.loanCycleId != null) {
+                                        if (item.source.contains("Deduction")) {
+                                            viewModel.navigateTo(Screen.EditLoan(item.loanCycleId))
+                                        } else {
+                                            viewModel.navigateTo(Screen.RecordPayment(item.loanCycleId))
+                                        }
+                                    }
+                                }.padding(4.dp)
                             )
                         }
                     }

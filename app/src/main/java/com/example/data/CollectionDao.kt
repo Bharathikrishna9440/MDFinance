@@ -346,4 +346,10 @@ interface CollectionDao {
 
     @Query("SELECT * FROM cash_balance_logs ORDER BY date DESC")
     fun getAllCashBalanceLogsFlow(): Flow<List<CashBalanceLog>>
+
+    @Query("SELECT * FROM cash_balance_logs")
+    suspend fun getAllCashBalanceLogsOnce(): List<CashBalanceLog>
+
+    @Query("DELETE FROM cash_balance_logs")
+    suspend fun deleteAllCashBalanceLogs()
 }

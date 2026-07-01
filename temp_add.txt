@@ -1,0 +1,26 @@
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(translate("SMS Confirmation", language), fontWeight = FontWeight.Bold, fontSize = 13.sp, color = ColorSlateDark)
+
+                // Preferences checkbox stack - 2 options
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { smsWeeklyReminder = !smsWeeklyReminder }
+                ) {
+                    Checkbox(checked = smsWeeklyReminder, onCheckedChange = { smsWeeklyReminder = it })
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(translate("Automatic Weekly SMS Reminder", language), fontSize = 13.sp)
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { smsConfirmationOfEntry = !smsConfirmationOfEntry }
+                ) {
+                    Checkbox(checked = smsConfirmationOfEntry, onCheckedChange = { smsConfirmationOfEntry = it })
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(translate("Automatic Entry Confirmation SMS", language), fontSize = 13.sp)
+                }
+            }
+
+        }
+
+        Surface(

@@ -290,9 +290,9 @@ fun DeviceSetupScreen(
                         } else {
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = translate("No backup file selected.", language),
+                                text = translate("No local backup file selected. Setup will try to restore from Cloud or start fresh (in test mode).", language),
                                 fontSize = 12.sp,
-                                color = Color.Red,
+                                color = Color(0xFF475569),
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center
@@ -325,10 +325,6 @@ fun DeviceSetupScreen(
             // 3. Confirm trigger Button
             Button(
                 onClick = {
-                    if (selectedRole == "ADMIN" && selectedFileUri == null) {
-                        errorMsg = translate("No backup file selected.", language)
-                        return@Button
-                    }
                     viewModel.completeDeviceSetup(
                         role = selectedRole,
                         context = context,

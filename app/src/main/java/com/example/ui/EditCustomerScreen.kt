@@ -226,18 +226,26 @@ fun EditCustomerScreen(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { smsWeeklyReminder = !smsWeeklyReminder }
+                    modifier = Modifier.clickable(enabled = phone.isNotBlank()) { smsWeeklyReminder = !smsWeeklyReminder }
                 ) {
-                    Checkbox(checked = smsWeeklyReminder, onCheckedChange = { smsWeeklyReminder = it })
+                    Checkbox(
+                        checked = if (phone.isBlank()) false else smsWeeklyReminder,
+                        onCheckedChange = { smsWeeklyReminder = it },
+                        enabled = phone.isNotBlank()
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(translate("Automatic Weekly SMS Reminder", language), fontSize = 13.sp)
                 }
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { smsConfirmationOfEntry = !smsConfirmationOfEntry }
+                    modifier = Modifier.clickable(enabled = phone.isNotBlank()) { smsConfirmationOfEntry = !smsConfirmationOfEntry }
                 ) {
-                    Checkbox(checked = smsConfirmationOfEntry, onCheckedChange = { smsConfirmationOfEntry = it })
+                    Checkbox(
+                        checked = if (phone.isBlank()) false else smsConfirmationOfEntry,
+                        onCheckedChange = { smsConfirmationOfEntry = it },
+                        enabled = phone.isNotBlank()
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(translate("Automatic Entry Confirmation SMS", language), fontSize = 13.sp)
                 }
