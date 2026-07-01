@@ -962,6 +962,9 @@ fun CustomerDetailScreen(
     val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
+        ParticleBackground(
+            modifier = Modifier.matchParentSize().background(appColors.primaryAccent.copy(alpha = 0.03f))
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -1626,29 +1629,21 @@ fun ActiveLoanSection(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
+                ShiningButton(
                     onClick = onAddPaymentClicked,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = appColors.primaryAccent,
-                        contentColor = Color.White
-                    ),
+                    color = appColors.primaryAccent,
+                    contentColor = Color.White,
                     modifier = Modifier.weight(1.0f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("+ Collections", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
-                }
+                    text = "+ Collections"
+                )
 
                 if (remaining <= 0) {
-                    Button(
+                    ShiningButton(
                         onClick = onMarkSettledClicked,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = appColors.secondaryAccent,
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Settle Account", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
-                    }
+                        color = appColors.secondaryAccent,
+                        contentColor = Color.White,
+                        text = "Settle Account"
+                    )
                 }
             }
         }

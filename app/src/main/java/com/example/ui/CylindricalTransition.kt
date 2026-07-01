@@ -3,6 +3,7 @@ package com.example.ui
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 
@@ -41,7 +42,7 @@ fun <T> CylindricalTurnContainer(
         modifier = modifier,
         label = "PageSlideAndFadeTurn"
     ) { state ->
-        Box(modifier = Modifier) {
+        Box(modifier = Modifier.fillMaxSize()) {
             content(state)
         }
     }

@@ -491,7 +491,8 @@ fun AddLoanScreen(
                     Text("Cancel")
                 }
 
-                Button(
+                ShiningButton(
+                    text = "Disburse Loan",
                     onClick = {
                         val p = loanAmount.toDoubleOrNull()
                         val interestVal = interestAmount.toDoubleOrNull() ?: 0.0
@@ -555,17 +556,12 @@ fun AddLoanScreen(
                             viewModel.navigateBack()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = appColors.primaryAccent,
-                        contentColor = Color.White
-                    ),
+                    color = appColors.primaryAccent,
+                    contentColor = Color.White,
                     modifier = Modifier
                         .weight(1f)
-                        .testTag("save_loan_button"),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Disburse Loan", color = Color.White)
-                }
+                        .testTag("save_loan_button")
+                )
             }
         }
     }

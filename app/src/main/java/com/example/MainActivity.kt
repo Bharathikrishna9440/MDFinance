@@ -151,11 +151,15 @@ class MainActivity : ComponentActivity() {
 
   override fun onSaveInstanceState(outState: Bundle) {
       super.onSaveInstanceState(outState)
+      outState.putBoolean("isAppRunning", true)
+      outState.putLong("lastSavedTime", System.currentTimeMillis())
       Log.d("MainActivity", "onSaveInstanceState: Saving critical state")
   }
 
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
       super.onRestoreInstanceState(savedInstanceState)
-      Log.d("MainActivity", "onRestoreInstanceState: Restoring critical state")
+      val isAppRunning = savedInstanceState.getBoolean("isAppRunning", false)
+      val lastSavedTime = savedInstanceState.getLong("lastSavedTime", 0L)
+      Log.d("MainActivity", "onRestoreInstanceState: Restoring critical state. Running: $isAppRunning, Time: $lastSavedTime")
   }
 }

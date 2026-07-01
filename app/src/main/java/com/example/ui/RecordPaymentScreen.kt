@@ -422,7 +422,8 @@ fun RecordPaymentScreen(
                     Text("Cancel")
                 }
 
-                Button(
+                ShiningButton(
+                    text = "Record Payment",
                     onClick = {
                         val a = amount.toDoubleOrNull()
                         val w = weekStr.toIntOrNull() ?: nextSuggestWeek
@@ -454,17 +455,12 @@ fun RecordPaymentScreen(
                             viewModel.navigateBack()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = appColors.primaryAccent,
-                        contentColor = Color.White
-                    ),
+                    color = appColors.primaryAccent,
+                    contentColor = Color.White,
                     modifier = Modifier
                         .weight(1f)
-                        .testTag("save_payment_button"),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Record Payment", color = Color.White, fontWeight = FontWeight.Bold)
-                }
+                        .testTag("save_payment_button")
+                )
             }
         }
     }

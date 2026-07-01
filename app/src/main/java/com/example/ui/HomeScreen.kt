@@ -1796,11 +1796,13 @@ fun StatsReportingCard(
             )
             .border(1.dp, appColors.headerCardBorder, RoundedCornerShape(16.dp))
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
+        Box(modifier = Modifier.fillMaxWidth()) {
+            AnimatedBlobBackground(modifier = Modifier.matchParentSize().clip(RoundedCornerShape(16.dp)))
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -2106,6 +2108,7 @@ fun StatsReportingCard(
                     )
                 }
             }
+        }
         }
     }
 }
