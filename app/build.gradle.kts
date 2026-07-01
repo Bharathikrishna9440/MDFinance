@@ -16,8 +16,8 @@ android {
     applicationId = "com.aistudio.weeklyfinance.khcrwt"
     minSdk = 26
     targetSdk = 36
-    versionCode = if (project.hasProperty("versionCode")) project.property("versionCode").toString().toInt() else 1
-    versionName = if (project.hasProperty("versionName")) project.property("versionName").toString() else "1.0"
+    versionCode = if (project.hasProperty("APP_VERSION_CODE")) project.property("APP_VERSION_CODE").toString().toInt() else 1
+    versionName = if (project.hasProperty("APP_VERSION_NAME")) project.property("APP_VERSION_NAME").toString() else "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

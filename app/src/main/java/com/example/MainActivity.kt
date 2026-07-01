@@ -148,4 +148,14 @@ class MainActivity : ComponentActivity() {
       Log.e("Main", "OnResume update check failed: ${e.message}")
     }
   }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+      super.onSaveInstanceState(outState)
+      Log.d("MainActivity", "onSaveInstanceState: Saving critical state")
+  }
+
+  override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+      super.onRestoreInstanceState(savedInstanceState)
+      Log.d("MainActivity", "onRestoreInstanceState: Restoring critical state")
+  }
 }

@@ -24,3 +24,8 @@ When generating, reading, importing, or backup-saving Excel workbooks:
 - **Shaking Threshold**: An item should shake if it needs attention.
 - **Days Range**: Check previous **2 days** and today (diff of 0, 1, or 2 from Today's collection day).
 - **Grace Period Check**: If there's no payment within the past **2 days** (inclusive of today), trigger the attention shake indicator.
+
+## Dashboard Pill & Deductions Rules
+1. **Deductions Separated from Profit**: Upfront deductions MUST NEVER be added to the "Profit" calculations in the dashboard stats. Profit strictly displays only the realized collected interest share from installments.
+2. **Deductions Pill**: There MUST be a distinct purple "Deductions" pill underneath the Collection, Disbursal, and Profit metrics on the Dashboard.
+3. **Deductions Detail Screen**: Clicking on the Deductions pill MUST open a dedicated ledger page for deductions, just like the other financial metrics, displaying all upfront loan deduction elements generated for the selected day.

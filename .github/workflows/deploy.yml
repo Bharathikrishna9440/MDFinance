@@ -44,8 +44,8 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'mdfinance123' }}
         run: |
           gradle assembleRelease \
-            -PversionCode=${{ steps.versioning.outputs.version_code }} \
-            -PversionName=${{ steps.versioning.outputs.version_name }}
+            -PAPP_VERSION_CODE=${{ steps.versioning.outputs.version_code }} \
+            -PAPP_VERSION_NAME=${{ steps.versioning.outputs.version_name }}
 
       - name: Create GitHub Release
         id: create_release

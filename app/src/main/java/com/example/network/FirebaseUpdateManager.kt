@@ -73,14 +73,12 @@ object FirebaseUpdateManager {
 
         val currentVersionCode = try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                pInfo.longVersionCode
-            } else {
-                pInfo.versionCode.toLong()
-            }
+            androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pInfo)
         } catch (e: Exception) {
             1L
         }
+
+        val runningFirebaseVersion = prefs.getLong("running_firebase_version", currentVersionCode)
 
         configRef.get().addOnSuccessListener { snapshot ->
             val latestCode = snapshot.child("versionId").getValue(Long::class.java) ?: currentVersionCode
@@ -90,8 +88,8 @@ object FirebaseUpdateManager {
             _latestVersionCode.value = latestCode
             _latestVersionName.value = latestName
 
-            if (latestCode > currentVersionCode && apkDownloadUrl.isNotEmpty()) {
-                Log.i(TAG, "New Update Detected! v$latestCode > v$currentVersionCode")
+            if (latestCode > runningFirebaseVersion && apkDownloadUrl.isNotEmpty()) {
+                Log.i(TAG, "New Update Detected! v$latestCode > v$runningFirebaseVersion")
                 
                 // Check if we have already downloaded this specific update file
                 val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "mdfinance-update-$latestCode.apk")
@@ -218,18 +216,12 @@ object FirebaseUpdateManager {
 
             enqueuedDownloadId = downloadManager.enqueue(request)
             
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.registerReceiver(
-                    downloadReceiver,
-                    IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                    Context.RECEIVER_EXPORTED
-                )
-            } else {
-                context.registerReceiver(
-                    downloadReceiver,
-                    IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-                )
-            }
+            androidx.core.content.ContextCompat.registerReceiver(
+                context,
+                downloadReceiver,
+                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                androidx.core.content.ContextCompat.RECEIVER_EXPORTED
+            )
 
             Toast.makeText(context, "Download started! Progress is in the notification bar.", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
@@ -244,6 +236,10 @@ object FirebaseUpdateManager {
         val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "mdfinance-update-$latestCode.apk")
         if (file.exists()) {
             try {
+                // Save the running firebase version so we don't get stuck in an install loop
+                val sharedPrefs = context.getSharedPreferences("weekly_finance_prefs", Context.MODE_PRIVATE)
+                sharedPrefs.edit().putLong("running_firebase_version", latestCode).apply()
+
                 val installIntent = Intent(Intent.ACTION_VIEW).apply {
                     val apkUri = androidx.core.content.FileProvider.getUriForFile(
                         context,

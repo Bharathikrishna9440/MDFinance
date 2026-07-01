@@ -1827,192 +1827,195 @@ fun StatsReportingCard(
                 }
             }
             
-            Spacer(modifier = Modifier.height(10.dp))
+            val isHome = selectedDay.equals("Home", ignoreCase = true)
+            val showCollection = if (isHome) stats.todaysCollectedAmount else stats.groupTodaysCollectedAmount
+            val showDisbursed = if (isHome) stats.todaysDisbursedAmount else stats.groupTodaysDisbursedAmount
+            val showInterest = if (isHome) stats.todaysInterestAmount else stats.groupTodaysInterestAmount
+            val showDeductions = if (isHome) stats.todaysDeductionsAmount else stats.groupTodaysDeductionsAmount
+            val hasAnyPills = showCollection > 0.0 || showDisbursed > 0.0 || showInterest > 0.0 || showDeductions > 0.0
 
-            // Beautiful vertical integration layout for dashboard stats to prevent horizontal truncations (no more dots / ellipses)
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val isHome = selectedDay.equals("Home", ignoreCase = true)
-                val showCollection = if (isHome) stats.todaysCollectedAmount else stats.groupTodaysCollectedAmount
-                val showDisbursed = if (isHome) stats.todaysDisbursedAmount else stats.groupTodaysDisbursedAmount
-                val showInterest = if (isHome) stats.todaysInterestAmount else stats.groupTodaysInterestAmount
-                val showDeductions = if (isHome) stats.todaysDeductionsAmount else stats.groupTodaysDeductionsAmount
+            if (hasAnyPills) {
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // 1. Collected
-                if (showCollection > 0.0) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(appColors.todayCollectionBg, RoundedCornerShape(12.dp))
-                            .clickable(enabled = onCardClick != null) { onCardClick?.invoke("COLLECTION") }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
-                            .testTag("stats_card_collection_btn"),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                // Beautiful vertical integration layout for dashboard stats to prevent horizontal truncations (no more dots / ellipses)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // 1. Collected
+                    if (showCollection > 0.0) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(appColors.todayCollectionBg, RoundedCornerShape(12.dp))
+                                .clickable(enabled = onCardClick != null) { onCardClick?.invoke("COLLECTION") }
+                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                                .testTag("stats_card_collection_btn"),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.TrendingUp,
-                                contentDescription = "Collected",
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = translate("Collected", language),
-                                color = Color.White.copy(alpha = 0.9f),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                letterSpacing = 0.5.sp
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.TrendingUp,
+                                    contentDescription = "Collected",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = translate("Collected", language),
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                            AnimatedNumberText(
+                                targetValue = showCollection,
+                                prefix = "₹ ",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Visible,
+                                delayMillis = 0,
+                                durationMillis = 1200
                             )
                         }
-                        AnimatedNumberText(
-                            targetValue = showCollection,
-                            prefix = "₹ ",
-                            color = Color.White,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Visible,
-                            delayMillis = 0,
-                            durationMillis = 1200
-                        )
                     }
-                }
 
-                // 2. Disbursed
-                if (showDisbursed > 0.0) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(appColors.todayDueCreatedBg, RoundedCornerShape(12.dp))
-                            .clickable(enabled = onCardClick != null) { onCardClick?.invoke("DISBURSAL") }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
-                            .testTag("stats_card_disbursal_btn"),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    // 2. Disbursed
+                    if (showDisbursed > 0.0) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(appColors.todayDueCreatedBg, RoundedCornerShape(12.dp))
+                                .clickable(enabled = onCardClick != null) { onCardClick?.invoke("DISBURSAL") }
+                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                                .testTag("stats_card_disbursal_btn"),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.TrendingDown,
-                                contentDescription = "Disbursed",
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = translate("Disbursed", language),
-                                color = Color.White.copy(alpha = 0.9f),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                letterSpacing = 0.5.sp
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.TrendingDown,
+                                    contentDescription = "Disbursed",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = translate("Disbursed", language),
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                            AnimatedNumberText(
+                                targetValue = showDisbursed,
+                                prefix = "₹ ",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Visible,
+                                delayMillis = 150,
+                                durationMillis = 1200
                             )
                         }
-                        AnimatedNumberText(
-                            targetValue = showDisbursed,
-                            prefix = "₹ ",
-                            color = Color.White,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Visible,
-                            delayMillis = 150,
-                            durationMillis = 1200
-                        )
                     }
-                }
 
-                // 3. Interest
-                if (showInterest > 0.0) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(appColors.todayInterestBg, RoundedCornerShape(12.dp))
-                            .clickable(enabled = onCardClick != null) { onCardClick?.invoke("PROFIT") }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
-                            .testTag("stats_card_profit_btn"),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    // 3. Interest
+                    if (showInterest > 0.0) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(appColors.todayInterestBg, RoundedCornerShape(12.dp))
+                                .clickable(enabled = onCardClick != null) { onCardClick?.invoke("PROFIT") }
+                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                                .testTag("stats_card_profit_btn"),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Percent,
-                                contentDescription = "Interest",
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = translate("Interest", language),
-                                color = Color.White.copy(alpha = 0.9f),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                letterSpacing = 0.5.sp
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Percent,
+                                    contentDescription = "Interest",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = translate("Interest", language),
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                            AnimatedNumberText(
+                                targetValue = showInterest,
+                                prefix = "₹ ",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Visible,
+                                delayMillis = 300,
+                                durationMillis = 1200
                             )
                         }
-                        AnimatedNumberText(
-                            targetValue = showInterest,
-                            prefix = "₹ ",
-                            color = Color.White,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Visible,
-                            delayMillis = 300,
-                            durationMillis = 1200
-                        )
                     }
-                }
 
-                // 4. Deductions
-                if (showDeductions > 0.0) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFF8B5CF6), RoundedCornerShape(12.dp))
-                            .clickable(enabled = onCardClick != null) { onCardClick?.invoke("DEDUCTIONS") }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
-                            .testTag("stats_card_deductions_btn"),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    // 4. Deductions
+                    if (showDeductions > 0.0) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFF8B5CF6), RoundedCornerShape(12.dp))
+                                .clickable(enabled = onCardClick != null) { onCardClick?.invoke("DEDUCTIONS") }
+                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                                .testTag("stats_card_deductions_btn"),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.MoneyOff,
-                                contentDescription = "Deductions",
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = translate("Deductions", language),
-                                color = Color.White.copy(alpha = 0.9f),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                letterSpacing = 0.5.sp
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MoneyOff,
+                                    contentDescription = "Deductions",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = translate("Deductions", language),
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                            AnimatedNumberText(
+                                targetValue = showDeductions,
+                                prefix = "₹ ",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Visible,
+                                delayMillis = 450,
+                                durationMillis = 1200
                             )
                         }
-                        AnimatedNumberText(
-                            targetValue = showDeductions,
-                            prefix = "₹ ",
-                            color = Color.White,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Visible,
-                            delayMillis = 450,
-                            durationMillis = 1200
-                        )
                     }
                 }
             }
@@ -2376,8 +2379,7 @@ fun CustomerOverviewCard(
                                     }
                                 }
 
-                                val needsAttention = (!isScrolling || !actualHasPaymentInPast2Days) && 
-                                                     activeDay != "Home" && 
+                                val needsAttention = activeDay != "Home" && 
                                                      balance > 0.0 && 
                                                      isCurrentDayMyDay && 
                                                      !actualHasPaymentInPast2Days
@@ -3142,7 +3144,7 @@ private fun getStatsForDay(
     val globalTodayDeductions = allLoanCycles
         .filter { it.startDate >= startOfToday }
         .sumOf { it.deduction }
-    val globalTodayInterest = globalTodayDeductions + allPayments
+    val globalTodayInterest = allPayments
         .filter { it.paymentDate >= startOfToday }
         .sumOf { p ->
             val loan = loanMap[p.loanCycleId]
@@ -3159,7 +3161,7 @@ private fun getStatsForDay(
     val groupTodayDeductions = groupAllLoans
         .filter { it.startDate >= startOfToday }
         .sumOf { it.deduction }
-    val groupTodayInterest = groupTodayDeductions + allPayments
+    val groupTodayInterest = allPayments
         .filter { it.paymentDate >= startOfToday && it.loanCycleId in groupAllLoanIds }
         .sumOf { p ->
             val loan = loanMap[p.loanCycleId]
